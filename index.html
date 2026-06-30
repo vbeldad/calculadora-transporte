@@ -241,6 +241,17 @@ select option{background:var(--surface2)}
     <button class="btn-primary" onclick="guardarTarifas()">💾 GUARDAR TARIFAS</button>
     <button class="btn-ghost" onclick="resetTarifas()" style="color:var(--danger);border-color:var(--danger);margin-top:10px">↩ RESTAURAR ORIGINALES</button>
     <div id="tar-msg" style="text-align:center;margin-top:12px;font-size:0.85rem;color:var(--success);min-height:20px"></div>
+
+    <div class="card" style="margin-top:24px">
+      <div class="card-title">Copia de Seguridad</div>
+      <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px;line-height:1.5">Guarda un archivo con todo: historial, tarifas y configuración. Útil para pasar los datos a otro dispositivo o tener una copia por si acaso.</p>
+      <button class="btn-secondary" onclick="exportarBackup()">⬇️ EXPORTAR COPIA DE SEGURIDAD</button>
+      <div style="margin-top:14px">
+        <label>Restaurar desde archivo</label>
+        <input type="file" id="backup-file" accept=".json" onchange="importarBackup(event)" style="padding:10px">
+      </div>
+      <div id="backup-msg" style="text-align:center;margin-top:12px;font-size:0.85rem;color:var(--success);min-height:20px"></div>
+    </div>
   </div>
 </div>
 
@@ -586,6 +597,64 @@ function resetTarifas() {
   const msg = document.getElementById('tar-msg');
   msg.textContent = '↩ Tarifas restauradas a los valores originales';
   setTimeout(()=>msg.textContent='', 2500);
+}
+
+
+// ── COPIA DE SEGURIDAD ───────────────────────────────────
+function exportarBackup() {
+  const data = {
+    version: 1,
+    fecha: new Date().toISOString(),
+    tarifas: T,
+    historial: historial
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fechaStr = new Date().toLocaleDateString('es-ES').replace(/\//g,'-');
+  a.href = url;
+  a.download = 'backup-transportes-' + fechaStr + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importarBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const msg = document.getElementById('backup-msg');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.tarifas || !data.historial) throw new Error('Formato no válido');
+      if (!confirm('Esto reemplazará tus tarifas e historial actuales por los del archivo. ¿Continuar?')) {
+        event.target.value = '';
+        return;
+      }
+      T = data.tarifas;
+      historial = data.historial;
+      localStorage.setItem('t_rep', JSON.stringify(T.repartos));
+      localStorage.setItem('t_com', JSON.stringify(T.combis));
+      localStorage.setItem('t_pal', JSON.stringify(T.palets));
+      localStorage.setItem('t_ter', JSON.stringify(T.termos));
+      localStorage.setItem('t_dev', String(T.dev));
+      localStorage.setItem('t_rec', JSON.stringify(T.recogidas));
+      localStorage.setItem('h_hist', JSON.stringify(historial));
+      renderTarifas();
+      renderHistorial();
+      msg.style.color = 'var(--success)';
+      msg.textContent = '✅ Copia restaurada correctamente';
+      setTimeout(()=>msg.textContent='', 3000);
+    } catch (err) {
+      msg.style.color = 'var(--danger)';
+      msg.textContent = '❌ El archivo no es una copia de seguridad válida';
+      setTimeout(()=>msg.textContent='', 3000);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
 }
 
 // ── INICIO ───────────────────────────────────────────────
