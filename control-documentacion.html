@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Documentación + Calculadora - Agencia de Transporte</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root{--bg:#0f0f0f;--surface:#1a1a1a;--surface2:#242424;--border:#2e2e2e;--accent:#c8f542;--text:#f0f0f0;--muted:#888;--danger:#ff5555;--success:#42f5a1;--warn:#f5d742}
+        * {margin:0;padding:0;box-sizing:border-box}
+        body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;padding:24px 16px}
+        
+        .main-tabs{display:grid;grid-template-columns:repeat(5,1fr);margin-bottom:28px;border:1px solid var(--border);border-radius:12px;overflow:hidden;max-width:900px;margin-left:auto;margin-right:auto}
+        .main-tab-btn{padding:14px;background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;letter-spacing:1px;text-transform:uppercase}
+        .main-tab-btn.active{background:rgba(200,245,66,0.1);color:var(--accent)}
+        .main-tab-content{display:none}.main-tab-content.visible{display:block}
+        
+        header{text-align:center;margin-bottom:32px}
+        header h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2rem,6vw,3.5rem);letter-spacing:4px;color:var(--accent);line-height:1}
+        header p{color:var(--muted);font-size:0.9rem;margin-top:6px;letter-spacing:2px;text-transform:uppercase}
+        
+        .container{max-width:900px;margin:0 auto}
+        
+        /* Estilos para Control de Documentos */
+        .doc-content{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px}
+        .doc-section{margin-bottom:24px}
+        .doc-title{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--accent);margin-bottom:16px}
+        .doc-input{width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;margin-bottom:10px}
+        .doc-input:focus{outline:none;border-color:var(--accent)}
+        
+        .btn-primary{width:100%;padding:14px;background:var(--accent);color:#0f0f0f;border:none;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;cursor:pointer;transition:all 0.2s}
+        .btn-primary:hover{background:#d4ff50;transform:translateY(-1px)}
+        .btn-secondary{width:100%;padding:12px;background:transparent;color:var(--accent);border:2px solid var(--accent);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:1rem;cursor:pointer;margin-top:8px}
+        .modal-qr { display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center }
+        .modal-qr.active { display:flex }
+        .modal-qr-content { background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:30px;text-align:center;max-width:500px;box-shadow:0 0 30px rgba(200,245,66,0.2);position:relative }
+        .modal-qr-close { position:absolute;top:15px;right:15px;background:var(--danger);border:none;color:white;width:35px;height:35px;border-radius:50%;cursor:pointer;font-size:1.1rem }
+        .qr-image { width:280px;height:280px;margin:20px auto;border:3px solid var(--accent);border-radius:8px;padding:10px;background:white }
+        .qr-info { text-align:left;background:var(--surface2);padding:12px;border-radius:6px;margin:15px 0;font-size:0.75rem;color:var(--muted);max-height:150px;overflow-y:auto }
+        .btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger);padding:8px 16px;border-radius:6px;cursor:pointer;font-size:0.9rem}
+        
+        /* Calculadora styles */
+        .tabs{display:grid;grid-template-columns:1fr 1fr 1fr;margin-bottom:20px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+        .tab-btn{padding:12px;background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;letter-spacing:1px;text-transform:uppercase}
+        .tab-btn.active{background:rgba(200,245,66,0.1);color:var(--accent)}
+        .tab-content{display:none}.tab-content.visible{display:block}
+        
+        .tipo-selector{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+        .tipo-btn{padding:14px;border:2px solid var(--border);border-radius:10px;background:var(--surface);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;text-align:center;letter-spacing:1px;text-transform:uppercase}
+        .tipo-btn:hover{border-color:var(--accent);color:var(--text)}
+        .tipo-btn.active{border-color:var(--accent);background:rgba(200,245,66,0.08);color:var(--accent)}
+        
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+        .card-title{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:2px;color:var(--accent);margin-bottom:16px}
+        
+        .resultado{background:linear-gradient(135deg,rgba(200,245,66,0.12),rgba(200,245,66,0.04));border:2px solid var(--accent);border-radius:12px;padding:20px;text-align:center;display:none;margin-top:16px}
+        .resultado.visible{display:block}
+        .resultado-precio{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--accent);margin:12px 0}
+        .resultado-label{font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+        .desglose{background:rgba(0,0,0,0.3);border-radius:8px;padding:12px;margin-top:12px;text-align:left}
+        .desglose-item{display:flex;justify-content:space-between;padding:4px 0;font-size:0.85rem;color:var(--muted)}
+        
+        .historial-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+        .historial-vacio{text-align:center;color:var(--muted);padding:30px}
+        .total-mes{background:linear-gradient(135deg,rgba(200,245,66,0.1),rgba(200,245,66,0.03));border:1px solid var(--accent);border-radius:10px;padding:16px;display:flex;justify-content:space-between;margin-top:16px}
+        .total-mes-num{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--accent)}
+        
+        .merch-header{display:grid;grid-template-columns:100px 1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+        .merch-row{display:grid;grid-template-columns:100px 1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+        .merch-row input,.merch-row select{padding:8px;font-size:0.85rem;text-align:center}
+        
+        @media(max-width:768px){.main-tabs{grid-template-columns:repeat(3,1fr)}.main-tab-btn{font-size:0.7rem}}
+    </style>
+</head>
+<body>
+
+<header><h1>Transportes</h1><p>Gestión Completa</p></header>
+
+<div class="main-tabs">
+    <button class="main-tab-btn active" onclick="setMainTab('control')">📋 Control Doc.</button>
+    <button class="main-tab-btn" onclick="setMainTab('vehicles')">🚗 Vehículos</button>
+    <button class="main-tab-btn" onclick="setMainTab('employees')">👥 Personal</button>
+    <button class="main-tab-btn" onclick="setMainTab('calculator')">🧮 Calculadora</button>
+    <button class="main-tab-btn" onclick="setMainTab('config')">⚙️ Config</button>
+</div>
+
+<div class="container">
+
+<!-- ===== CONTROL DOCUMENTACIÓN ===== -->
+<div class="main-tab-content visible" id="main-control">
+    <div class="doc-content">
+        <div class="doc-section">
+            <div class="doc-title">📊 Dashboard de Alertas</div>
+            <div id="dashboard-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+                <div style="background:rgba(255,85,85,0.1);border:1px solid var(--danger);border-radius:8px;padding:16px;text-align:center">
+                    <div style="color:var(--danger);font-size:0.8rem;font-weight:600">CRÍTICAS</div>
+                    <div id="critical-count" style="font-family:'Bebas Neue';font-size:1.8rem;color:var(--danger)">0</div>
+                </div>
+                <div style="background:rgba(245,215,66,0.1);border:1px solid var(--warn);border-radius:8px;padding:16px;text-align:center">
+                    <div style="color:var(--warn);font-size:0.8rem;font-weight:600">AVISO</div>
+                    <div id="warning-count" style="font-family:'Bebas Neue';font-size:1.8rem;color:var(--warn)">0</div>
+                </div>
+                <div style="background:rgba(66,245,161,0.1);border:1px solid var(--success);border-radius:8px;padding:16px;text-align:center">
+                    <div style="color:var(--success);font-size:0.8rem;font-weight:600">EN REGLA</div>
+                    <div id="ok-count" style="font-family:'Bebas Neue';font-size:1.8rem;color:var(--success)">0</div>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="updateDashboard()">🔄 ACTUALIZAR</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== VEHÍCULOS ===== -->
+<div class="main-tab-content" id="main-vehicles">
+    <div class="doc-content">
+        <div class="doc-section">
+            <div class="doc-title">🚗 Gestión de Vehículos</div>
+            <div style="background:var(--surface2);padding:16px;border-radius:8px;margin-bottom:20px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                    <div><label style="font-size:0.75rem;color:var(--muted)">Matrícula</label><input class="doc-input" type="text" id="vehicleMatricula" placeholder="AB-1234-CD"></div>
+                    <div><label style="font-size:0.75rem;color:var(--muted)">Modelo</label><input class="doc-input" type="text" id="vehicleModel" placeholder="Volvo FH16"></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                    <div><label style="font-size:0.75rem;color:var(--muted)">Año</label><input class="doc-input" type="text" id="vehicleYear" placeholder="2020"></div>
+                    <div></div>
+                </div>
+                <div style="background:var(--surface);padding:12px;border-radius:6px;margin-bottom:12px;border:1px solid var(--border)">
+                    <div style="font-size:0.75rem;color:var(--accent);font-weight:600;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase">Documentos</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                        <div><label style="font-size:0.7rem;color:var(--muted)">ITV</label><input class="doc-input" type="date" id="vehicleITV" style="padding:8px"></div>
+                        <div><label style="font-size:0.7rem;color:var(--muted)">Seguro</label><input class="doc-input" type="date" id="vehicleSeguro" style="padding:8px"></div>
+                        <div><label style="font-size:0.7rem;color:var(--muted)">Revisión</label><input class="doc-input" type="date" id="vehicleRevision" style="padding:8px"></div>
+                        <div><label style="font-size:0.7rem;color:var(--muted)">ATP</label><input class="doc-input" type="date" id="vehicleATP" style="padding:8px"></div>
+                        <div><label style="font-size:0.7rem;color:var(--muted)">Tacógrafo</label><input class="doc-input" type="date" id="vehicleTacogarfo" style="padding:8px"></div>
+                        <div><label style="font-size:0.7rem;color:var(--muted)">Tarjeta Transporte</label><input class="doc-input" type="date" id="vehicleTransporte" style="padding:8px"></div>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="addVehicle()">➕ AGREGAR VEHÍCULO</button>
+            </div>
+            <div id="vehiclesList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== PERSONAL ===== -->
+<div class="main-tab-content" id="main-employees">
+    <div class="doc-content">
+        <div class="doc-section">
+            <div class="doc-title">👥 Gestión de Personal</div>
+            <div style="background:var(--surface2);padding:16px;border-radius:8px;margin-bottom:20px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                    <div><label style="font-size:0.75rem;color:var(--muted)">Nombre</label><input class="doc-input" type="text" id="employeeName" placeholder="Juan García López"></div>
+                    <div><label style="font-size:0.75rem;color:var(--muted)">Puesto</label><input class="doc-input" type="text" id="employeePosition" placeholder="Conductor"></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                    <div><label style="font-size:0.75rem;color:var(--muted)">Fecha inicio contrato</label><input class="doc-input" type="date" id="employeeStartDate"></div>
+                    <div><label style="font-size:0.75rem;color:var(--muted)">Tipo contrato</label><select class="doc-input" id="employeeContract" style="padding:10px"><option value="indefinido">Indefinido</option><option value="temporal">Temporal</option><option value="practicas">Prácticas</option></select></div>
+                </div>
+                <div style="background:var(--surface);padding:12px;border-radius:6px;margin-bottom:12px;border:1px solid var(--border)">
+                    <div style="font-size:0.75rem;color:var(--accent);font-weight:600;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase">Documentos</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                        <div><label style="font-size:0.7rem;color:var(--muted)">Permiso conducir (cumpleaños)</label><input class="doc-input" type="date" id="employeeLicenseDate" style="padding:8px"></div>
+                        <div><label style="font-size:0.7rem;color:var(--muted)">CAP (vencimiento)</label><input class="doc-input" type="date" id="employeeCapDate" style="padding:8px"></div>
+                    </div>
+                </div>
+                <div style="background:var(--surface);padding:12px;border-radius:6px;margin-bottom:12px;border:1px solid var(--border)">
+                    <div style="font-size:0.75rem;color:var(--accent);font-weight:600;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase">Períodos de Vacaciones (máx 3)</div>
+                    <div id="vacationPeriods" style="display:grid;gap:8px"></div>
+                    <button class="btn-secondary" id="addVacationBtn" onclick="addVacationRow()" style="margin-top:8px;padding:8px;font-size:0.85rem">+ Agregar período</button>
+                </div>
+                <button class="btn-primary" onclick="addEmployee()">➕ AGREGAR EMPLEADO</button>
+            </div>
+            <div id="employeesList"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== CALCULADORA ORIGINAL INTEGRADA ===== -->
+<div class="main-tab-content" id="main-calculator">
+    <div class="doc-content">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="setTab('calc')">🧮 Calculadora</button>
+            <button class="tab-btn" onclick="setTab('hist')">📋 Historial</button>
+            <button class="tab-btn" onclick="setTab('tar')">⚙️ Tarifas</button>
+        </div>
+
+        <!-- CALCULADORA -->
+        <div class="tab-content visible" id="tab-calc">
+            <div style="background:var(--surface2);padding:16px;border-radius:8px;margin-bottom:20px;border:1px solid var(--border)">
+                <div style="font-size:0.75rem;color:var(--accent);font-weight:600;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase">Asignación</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div>
+                        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:6px">Conductor</label>
+                        <select id="calc-conductor" class="doc-input">
+                            <option value="">— Selecciona conductor —</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:6px">Matrícula</label>
+                        <select id="calc-matricula" class="doc-input">
+                            <option value="">— Selecciona vehículo —</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tipo-selector">
+                <button class="tipo-btn" id="btn-pactado" onclick="setTipo('pactado')">🤝 Precio Pactado</button>
+                <button class="tipo-btn" id="btn-tarifa" onclick="setTipo('tarifa')">📊 Por Tarifa</button>
+            </div>
+
+            <div class="pactado-section" id="pactado-section" style="display:none">
+                <div class="card">
+                    <div class="card-title">Precio Acordado</div>
+                    <label style="font-size:0.8rem;color:var(--muted);letter-spacing:1px">Precio pactado (€)</label>
+                    <input type="number" id="precio-pactado" placeholder="0,00" min="0" step="0.01" class="doc-input">
+                    <button class="btn-primary" onclick="calcular()">CALCULAR</button>
+                </div>
+            </div>
+
+            <div class="tarifa-section" id="tarifa-section" style="display:none">
+                <div class="card">
+                    <div class="card-title">Repartos</div>
+                    <label style="font-size:0.8rem;color:var(--muted)">Número de repartos (1–17)</label>
+                    <input type="number" id="num-repartos" min="1" max="17" placeholder="Ej: 10" class="doc-input" oninput="if(this.value>17)this.value=17">
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Mercancía por Zona</div>
+                    <div class="merch-header"><span>Zona</span><span>Combis</span><span>Palés</span><span>Termos</span></div>
+                    <div class="merch-row">
+                        <select id="zona1" class="doc-input" style="padding:6px"><option value="0">— ninguna —</option><option value="1">Zona 1</option><option value="2">Zona 2</option><option value="3">Zona 3</option><option value="4">Zona 4</option><option value="5">Zona 5</option><option value="6">Zona 6</option></select>
+                        <input type="number" id="combis1" min="0" value="0" class="doc-input" style="padding:6px">
+                        <input type="number" id="palets1" min="0" value="0" class="doc-input" style="padding:6px">
+                        <input type="number" id="termos1" min="0" value="0" class="doc-input" style="padding:6px">
+                    </div>
+                    <div class="merch-row">
+                        <select id="zona2" class="doc-input" style="padding:6px"><option value="0">— ninguna —</option><option value="1">Zona 1</option><option value="2">Zona 2</option><option value="3">Zona 3</option><option value="4">Zona 4</option><option value="5">Zona 5</option><option value="6">Zona 6</option></select>
+                        <input type="number" id="combis2" min="0" value="0" class="doc-input" style="padding:6px">
+                        <input type="number" id="palets2" min="0" value="0" class="doc-input" style="padding:6px">
+                        <input type="number" id="termos2" min="0" value="0" class="doc-input" style="padding:6px">
+                    </div>
+                    <div class="merch-row">
+                        <select id="zona3" class="doc-input" style="padding:6px"><option value="0">— ninguna —</option><option value="1">Zona 1</option><option value="2">Zona 2</option><option value="3">Zona 3</option><option value="4">Zona 4</option><option value="5">Zona 5</option><option value="6">Zona 6</option></select>
+                        <input type="number" id="combis3" min="0" value="0" class="doc-input" style="padding:6px">
+                        <input type="number" id="palets3" min="0" value="0" class="doc-input" style="padding:6px">
+                        <input type="number" id="termos3" min="0" value="0" class="doc-input" style="padding:6px">
+                    </div>
+
+                    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+                        <label style="font-size:0.8rem;color:var(--muted)">Combis devueltos</label>
+                        <input type="number" id="dev-combis" min="0" value="0" class="doc-input" style="max-width:180px">
+                        <div style="font-size:0.75rem;color:var(--muted);margin-top:6px">Se suman <strong id="dev-label" style="color:var(--accent)">0,34 €</strong> por combi devuelto</div>
+                    </div>
+                </div>
+
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.85rem;color:var(--muted)">
+                    <input type="checkbox" id="chk-recogida" onchange="toggleRecogida()" style="width:16px;height:16px">
+                    Incluir recogida de combis
+                </label>
+
+                <div class="card" id="card-recogidas" style="display:none">
+                    <div class="card-title">Recogida de Combis</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                        <div>
+                            <label style="font-size:0.8rem;color:var(--muted)">Zona de recogida</label>
+                            <select id="rec-zona" class="doc-input" onchange="prevRecogida()">
+                                <option value="0">— ninguna —</option>
+                                <option value="2">Zona 2</option><option value="3">Zona 3</option><option value="4">Zona 4</option><option value="5">Zona 5</option><option value="6">Zona 6</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem;color:var(--muted)">Nº de tiendas (1–6)</label>
+                            <input type="number" id="rec-tiendas" min="1" max="6" placeholder="1" class="doc-input" oninput="if(this.value>6)this.value=6;prevRecogida()">
+                        </div>
+                    </div>
+                    <div id="rec-preview" style="font-size:0.85rem;color:var(--accent);margin-top:10px"></div>
+                </div>
+
+                <button class="btn-primary" onclick="calcular()">CALCULAR PRECIO</button>
+            </div>
+
+            <div class="resultado" id="resultado">
+                <div class="resultado-label">Precio Total</div>
+                <div class="resultado-precio" id="precio-final">0,00 €</div>
+                <div class="desglose" id="desglose"></div>
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;margin-top:14px;align-items:end">
+                    <div>
+                        <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:6px">Nº de hoja</label>
+                        <input type="number" id="num-hoja" min="1" placeholder="Ej: 42" class="doc-input" style="text-align:center">
+                    </div>
+                    <button class="btn-secondary" onclick="guardarEnHistorial()" style="margin:0">➕ GUARDAR</button>
+                </div>
+                <button class="btn-secondary" onclick="window.print()" style="margin-top:10px">🖨️ IMPRIMIR</button>
+            </div>
+        </div>
+
+        <!-- HISTORIAL -->
+        <div class="tab-content" id="tab-hist">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <div>
+                    <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--accent)" id="mes-titulo">—</div>
+                    <div style="font-size:0.75rem;color:var(--muted);letter-spacing:1px">Mes en curso</div>
+                </div>
+                <button class="btn-danger" onclick="abrirModalCierre()" style="padding:10px 16px">🔒 CERRAR MES</button>
+            </div>
+            <div id="lista-historial" class="historial-vacio">No hay repartos registrados este mes.</div>
+            <div class="total-mes">
+                <div><div style="font-size:0.75rem;color:var(--muted)">Total acumulado</div><div id="total-mes-repartos" style="font-size:0.8rem;color:var(--muted);margin-top:3px"></div></div>
+                <div class="total-mes-num" id="total-mes-num">0,00 €</div>
+            </div>
+            <button class="btn-secondary" onclick="imprimirHistorial()" style="margin-top:12px">🖨️ IMPRIMIR HISTORIAL</button>
+            <button class="btn-secondary" onclick="descargarExcel()" style="margin-top:12px">📊 DESCARGAR EXCEL</button>
+        </div>
+
+        <!-- TARIFAS -->
+        <div class="tab-content" id="tab-tar">
+            <div class="card">
+                <div class="card-title">Repartos (1–17)</div>
+                <div id="tar-repartos" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Combis por Zona</div>
+                <div id="tar-combis" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Palés por Zona</div>
+                <div id="tar-palets" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Termos por Zona</div>
+                <div id="tar-termos" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Devolución de Combis</div>
+                <div style="max-width:200px">
+                    <label style="font-size:0.75rem;color:var(--muted)">€ por combi devuelto</label>
+                    <input type="number" id="tar-dev" step="0.01" class="doc-input">
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Recogidas (zona × tiendas)</div>
+                <div id="tar-recogidas"></div>
+            </div>
+            <button class="btn-primary" onclick="guardarTarifas()">💾 GUARDAR TARIFAS</button>
+            <button class="btn-secondary" onclick="resetTarifas()" style="color:var(--danger);border-color:var(--danger);margin-top:10px">↩ RESTAURAR ORIGINALES</button>
+            <div id="tar-msg" style="text-align:center;margin-top:12px;font-size:0.85rem;min-height:20px"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== CONFIG ===== -->
+<div class="main-tab-content" id="main-config">
+    <div class="doc-content">
+        <div class="doc-section">
+            <div class="doc-title">⚙️ Configuración</div>
+            <p style="color:var(--muted);font-size:0.85rem;margin-bottom:16px">Aquí puedes exportar/importar datos y hacer copias de seguridad.</p>
+            <button class="btn-primary" onclick="exportarBackup()">⬇️ EXPORTAR COPIA DE SEGURIDAD</button>
+            <button class="btn-secondary" onclick="document.getElementById('backup-file').click()" style="margin-top:8px">📤 IMPORTAR COPIA</button>
+            <input type="file" id="backup-file" accept=".json" onchange="importarBackup(event)" style="display:none">
+            <div id="backup-msg" style="text-align:center;margin-top:12px;font-size:0.85rem;min-height:20px"></div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<!-- MODAL CIERRE MES -->
+<div id="modal-cierre" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:100;align-items:center;justify-content:center">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center">
+        <h2 style="font-family:'Bebas Neue';font-size:1.8rem;color:var(--accent);margin-bottom:12px">Cerrar Mes</h2>
+        <p style="color:var(--muted);margin-bottom:16px">Se guardará el resumen y el historial se reiniciará.</p>
+        <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Total del mes</div>
+        <div id="modal-total" style="font-family:'Bebas Neue';font-size:2.5rem;color:var(--accent);margin:8px 0">0,00 €</div>
+        <div id="modal-sub" style="font-size:0.8rem;color:var(--muted);margin-bottom:20px"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <button class="btn-secondary" onclick="cerrarModal()" style="color:var(--muted);border-color:var(--border);margin:0">Cancelar</button>
+            <button class="btn-primary" onclick="confirmarCierre()">CERRAR MES</button>
+        </div>
+    </div>
+</div>
+
+<iframe id="print-iframe" style="position:fixed;top:-9999px;left:-9999px;width:800px;height:600px;border:none"></iframe>
+
+<script>
+// ── TABS PRINCIPALES ──────────────────────────────────
+function setMainTab(t) {
+    document.querySelectorAll('.main-tab-content').forEach(el => el.classList.remove('visible'));
+    document.querySelectorAll('.main-tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('main-'+t).classList.add('visible');
+    event.target.classList.add('active');
+}
+
+// ── TARIFAS DE CALCULADORA ──────────────────────────────
+const DEF_REPARTOS = [0,47.21,52.13,57.06,61.97,66.91,71.83,76.76,81.68,86.61,91.53,96.46,101.38,106.36,111.23,116.16,121.08,123.00];
+const DEF_COMBIS   = [0,1.14,1.14,2.14,3.53,4.95,6.78];
+const DEF_PALETS   = [0,1.14,1.14,2.14,3.53,4.95,6.78];
+const DEF_TERMOS   = [0,1.70,1.70,3.20,5.30,7.42,10.17];
+const DEF_DEV      = 0.34;
+const DEF_RECOGIDAS = {
+  2:[0,59.68,66.89,71.00,74.09,81.29,83.35],
+  3:[0,87.47,94.67,98.78,102.90,105.99,109.07],
+  4:[0,114.22,122.45,126.57,130.68,133.77,136.86],
+  5:[0,148.18,156.41,160.52,165.67,167.73,173.90],
+  6:[0,174.93,182.13,184.19,189.34,193.45,195.51]
+};
+
+function cargarTarifas() {
+  return {
+    repartos:  JSON.parse(localStorage.getItem('t_rep')  || 'null') || [...DEF_REPARTOS],
+    combis:    JSON.parse(localStorage.getItem('t_com')  || 'null') || [...DEF_COMBIS],
+    palets:    JSON.parse(localStorage.getItem('t_pal')  || 'null') || [...DEF_PALETS],
+    termos:    JSON.parse(localStorage.getItem('t_ter')  || 'null') || [...DEF_TERMOS],
+    dev:       parseFloat(localStorage.getItem('t_dev')  || DEF_DEV),
+    recogidas: JSON.parse(localStorage.getItem('t_rec')  || 'null') || JSON.parse(JSON.stringify(DEF_RECOGIDAS))
+  };
+}
+
+let T = cargarTarifas();
+let tipo = null;
+let ultimoRes = null;
+let historial = JSON.parse(localStorage.getItem('h_hist') || '[]');
+
+// ── TABS CALCULADORA ──────────────────────────────────
+function setTab(t) {
+  ['calc','hist','tar'].forEach(id => document.getElementById('tab-'+id).classList.toggle('visible', t===id));
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', ['calc','hist','tar'][i]===t));
+  if (t==='hist') renderHistorial();
+  if (t==='tar')  renderTarifas();
+}
+
+// ── TIPO PRECIO ──────────────────────────────────────
+function setTipo(t) {
+  tipo = t;
+  document.getElementById('btn-pactado').classList.toggle('active', t==='pactado');
+  document.getElementById('btn-tarifa').classList.toggle('active', t==='tarifa');
+  document.getElementById('pactado-section').style.display = t==='pactado' ? 'block' : 'none';
+  document.getElementById('tarifa-section').style.display = t==='tarifa' ? 'block' : 'none';
+  document.getElementById('resultado').classList.remove('visible');
+  ultimoRes = null;
+}
+
+function toggleRecogida() {
+  const on = document.getElementById('chk-recogida').checked;
+  document.getElementById('card-recogidas').style.display = on ? 'block' : 'none';
+  document.getElementById('card-repartos').parentElement.style.display = on ? 'none' : 'block';
+  document.getElementById('card-mercancias').style.display = on ? 'none' : 'block';
+  document.getElementById('resultado').classList.remove('visible');
+  ultimoRes = null;
+}
+
+function prevRecogida() {
+  const z = parseInt(document.getElementById('rec-zona').value)||0;
+  const t = parseInt(document.getElementById('rec-tiendas').value)||0;
+  const el = document.getElementById('rec-preview');
+  if (z && t>=1 && t<=6) el.textContent = 'Precio: ' + T.recogidas[z][t].toFixed(2).replace('.',',') + ' €';
+  else el.textContent = '';
+}
+
+function fmt(n) { return n.toFixed(2).replace('.', ',') + ' €'; }
+
+// ── CALCULAR ──────────────────────────────────────
+function calcular() {
+  if (!tipo) { alert('Selecciona el tipo de precio primero'); return; }
+  let total = 0, html = '';
+
+  if (tipo === 'pactado') {
+    const p = parseFloat(document.getElementById('precio-pactado').value);
+    if (isNaN(p) || p <= 0) { alert('Introduce el precio pactado'); return; }
+    total = p;
+    html = '<div class="desglose-item"><span>Precio pactado</span><span>' + fmt(p) + '</span></div>';
+  } else if (document.getElementById('chk-recogida').checked) {
+    const rz = parseInt(document.getElementById('rec-zona').value)||0;
+    const rt = parseInt(document.getElementById('rec-tiendas').value)||0;
+    if (!rz) { alert('Selecciona la zona de recogida'); return; }
+    if (!rt || rt<1 || rt>6) { alert('Introduce el número de tiendas (1–6)'); return; }
+    total = T.recogidas[rz][rt];
+    html = '<div style="font-size:0.7rem;color:var(--accent);letter-spacing:1px;text-transform:uppercase;font-weight:700;padding:4px 0">Recogida</div>';
+    html += '<div class="desglose-item"><span>Zona ' + rz + ' — ' + rt + ' tienda' + (rt>1?'s':'') + '</span><span>' + fmt(total) + '</span></div>';
+  } else {
+    const r = parseInt(document.getElementById('num-repartos').value);
+    if (!r || r<1 || r>17) { alert('Introduce un número de repartos entre 1 y 17'); return; }
+
+    const pr = T.repartos[r];
+    total += pr;
+    html += '<div style="font-size:0.7rem;color:var(--accent);letter-spacing:1px;text-transform:uppercase;font-weight:700;padding:4px 0">Repartos</div>';
+    html += '<div class="desglose-item"><span>' + r + ' repartos</span><span>' + fmt(pr) + '</span></div>';
+
+    [1,2,3].forEach(i => {
+      const z = parseInt(document.getElementById('zona'+i).value)||0;
+      if (!z) return;
+      const c = parseInt(document.getElementById('combis'+i).value)||0;
+      const p = parseInt(document.getElementById('palets'+i).value)||0;
+      const t = parseInt(document.getElementById('termos'+i).value)||0;
+      const pc = c*T.combis[z], pp = p*T.palets[z], pt = t*T.termos[z];
+      if (pc+pp+pt === 0) return;
+      total += pc+pp+pt;
+      html += '<div style="font-size:0.7rem;color:var(--accent);letter-spacing:1px;text-transform:uppercase;font-weight:700;padding:6px 0 2px">Mercancía — Zona ' + z + '</div>';
+      if (c>0) html += '<div class="desglose-item"><span>' + c + ' combis × ' + T.combis[z].toFixed(2).replace('.',',') + ' €</span><span>' + fmt(pc) + '</span></div>';
+      if (p>0) html += '<div class="desglose-item"><span>' + p + ' palés × ' + T.palets[z].toFixed(2).replace('.',',') + ' €</span><span>' + fmt(pp) + '</span></div>';
+      if (t>0) html += '<div class="desglose-item"><span>' + t + ' termos × ' + T.termos[z].toFixed(2).replace('.',',') + ' €</span><span>' + fmt(pt) + '</span></div>';
+    });
+
+    const dev = parseInt(document.getElementById('dev-combis').value)||0;
+    if (dev > 0) {
+      const devTotal = dev * T.dev;
+      total += devTotal;
+      html += '<div style="font-size:0.7rem;color:var(--accent);letter-spacing:1px;text-transform:uppercase;font-weight:700;padding:6px 0 2px">Devolución Combis</div>';
+      html += '<div class="desglose-item"><span>' + dev + ' combis × ' + T.dev.toFixed(2).replace('.',',') + ' €</span><span style="color:var(--success)">+' + fmt(devTotal) + '</span></div>';
+    }
+
+    html += '<div class="desglose-item" style="color:var(--accent);font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><span>TOTAL</span><span>' + fmt(total) + '</span></div>';
+  }
+
+  document.getElementById('precio-final').textContent = fmt(total);
+  document.getElementById('desglose').innerHTML = html;
+  ultimoRes = { total };
+  document.getElementById('resultado').classList.add('visible');
+}
+
+// ── HISTORIAL ──────────────────────────────────────
+function guardarEnHistorial() {
+  if (!ultimoRes) return;
+  const numHoja = document.getElementById('num-hoja').value.trim();
+  if (!numHoja || parseInt(numHoja)<1) { alert('Introduce un número de hoja válido'); return; }
+  const conductor = document.getElementById('calc-conductor').value || 'Sin asignar';
+  const matricula = document.getElementById('calc-matricula').value || 'Sin asignar';
+  const now = new Date();
+  const fecha = now.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' + now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  historial.push({ 
+    hoja: parseInt(numHoja), 
+    fecha, 
+    total: ultimoRes.total,
+    conductor,
+    matricula,
+    tipo: tipoCalculo,
+    detalles: ultimoRes
+  });
+  localStorage.setItem('h_hist', JSON.stringify(historial));
+  document.getElementById('num-hoja').value = '';
+  alert('✅ Guardado');
+}
+
+function renderHistorial() {
+  // Llenar selectores de conductor y vehículo
+  const conductorSelect = document.getElementById('calc-conductor');
+  const matriculaSelect = document.getElementById('calc-matricula');
+  
+  conductorSelect.innerHTML = '<option value="">— Selecciona conductor —</option>' + 
+    employees.map(e => `<option value="${e.name}">${e.name}</option>`).join('');
+  
+  matriculaSelect.innerHTML = '<option value="">— Selecciona vehículo —</option>' + 
+    vehicles.map(v => `<option value="${v.matricula}">${v.matricula} - ${v.model}</option>`).join('');
+  
+  const now = new Date();
+  document.getElementById('mes-titulo').textContent = now.toLocaleDateString('es-ES',{month:'long',year:'numeric'}).toUpperCase();
+  const lista = document.getElementById('lista-historial');
+  if (historial.length === 0) {
+    lista.innerHTML = '<div class="historial-vacio">No hay repartos registrados este mes.</div>';
+  } else {
+    lista.innerHTML = historial.map((item,idx) =>
+      '<div class="historial-item">' +
+      '<div style="font-family:\'Bebas Neue\';font-size:1.2rem;color:var(--accent)">H-'+String(item.hoja).padStart(3,'0')+'</div>' +
+      '<div style="flex:1"><div style="font-size:0.75rem;color:var(--muted)">'+item.fecha+'</div><div style="font-size:0.7rem;color:var(--muted)">'+item.conductor+' • '+item.matricula+'</div></div>' +
+      '<div style="font-family:\'Bebas Neue\';font-size:1.3rem">'+fmt(item.total)+'</div>' +
+      '<button class="btn-danger" onclick="eliminarItem('+idx+')" style="margin-left:8px">🗑</button>' +
+      '</div>'
+    ).join('');
+  }
+  const total = historial.reduce((s,i)=>s+i.total, 0);
+  document.getElementById('total-mes-num').textContent = fmt(total);
+  document.getElementById('total-mes-repartos').textContent = historial.length + ' reparto' + (historial.length!==1?'s':'');
+}
+
+function eliminarItem(idx) {
+  historial.splice(idx, 1);
+  localStorage.setItem('h_hist', JSON.stringify(historial));
+  renderHistorial();
+}
+
+function abrirModalCierre() {
+  if (historial.length===0) { alert('No hay repartos registrados este mes.'); return; }
+  const total = historial.reduce((s,i)=>s+i.total,0);
+  document.getElementById('modal-total').textContent = fmt(total);
+  document.getElementById('modal-sub').textContent = historial.length + ' reparto' + (historial.length!==1?'s':'');
+  document.getElementById('modal-cierre').style.display = 'flex';
+}
+
+function cerrarModal() { document.getElementById('modal-cierre').style.display = 'none'; }
+
+function confirmarCierre() {
+  historial = [];
+  localStorage.setItem('h_hist', JSON.stringify(historial));
+  cerrarModal();
+  renderHistorial();
+  alert('✅ Mes cerrado');
+}
+
+function imprimirHistorial() {
+  if (historial.length===0) { alert('No hay repartos en el historial.'); return; }
+  const now = new Date();
+  const mes = now.toLocaleDateString('es-ES',{month:'long',year:'numeric'}).toUpperCase();
+  const total = historial.reduce((s,i)=>s+i.total,0);
+  const filas = historial.map(item =>
+    '<tr><td>H-'+String(item.hoja).padStart(3,'0')+'</td><td>'+item.fecha+'</td><td style="text-align:right;font-weight:700">'+fmt(item.total)+'</td></tr>'
+  ).join('');
+  const doc = document.getElementById('print-iframe').contentWindow.document;
+  doc.open();
+  doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Historial '+mes+'</title><style>body{font-family:Arial;padding:30px}h1{margin-bottom:4px}.sub{color:#777;font-size:0.85rem;margin-bottom:24px}table{width:100%;border-collapse:collapse}th{background:#000;color:#fff;padding:10px;text-align:left;font-size:0.8rem}td{padding:8px 10px;border-bottom:1px solid #e0e0e0;font-size:0.9rem}.tf{border-top:2px solid #000;font-weight:700;background:#f5f5f5}</style></head><body><h1>Historial de Repartos</h1><div class="sub">'+mes+' — '+historial.length+' reparto'+(historial.length!==1?'s':'')+'</div><table><thead><tr><th>Hoja</th><th>Fecha</th><th style="text-align:right">Importe</th></tr></thead><tbody>'+filas+'</tbody><tfoot><tr class="tf"><td colspan="2">TOTAL DEL MES</td><td style="text-align:right">'+fmt(total)+'</td></tr></tfoot></table></body></html>');
+  doc.close();
+  setTimeout(()=>document.getElementById('print-iframe').contentWindow.print(), 400);
+}
+
+function descargarExcel() {
+  if (historial.length === 0) { alert('No hay datos para descargar'); return; }
+  
+  // Crear CSV
+  let csv = 'HISTORIAL DE REPARTOS\n';
+  csv += 'Mes: ' + new Date().toLocaleDateString('es-ES',{month:'long',year:'numeric'}) + '\n\n';
+  csv += 'Hoja,Fecha,Hora,Conductor,Matrícula,Importe\n';
+  
+  historial.forEach(item => {
+    const [fecha, hora] = item.fecha.split(' ');
+    csv += `H-${String(item.hoja).padStart(3,'0')},"${fecha}","${hora}","${item.conductor}","${item.matricula}",${item.total.toString().replace('.',',')}\n`;
+  });
+  
+  const total = historial.reduce((s,i)=>s+i.total, 0);
+  csv += '\n\nRESUMEN,,,,' + historial.length + ' reparto' + (historial.length!==1?'s':'') + ',' + total.toString().replace('.',',') + ' €';
+  
+  // Descargar
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  const now = new Date();
+  const nomArchivo = 'Repartos-' + now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '.csv';
+  link.setAttribute('href', url);
+  link.setAttribute('download', nomArchivo);
+  link.click();
+}
+
+// ── TARIFAS ────────────────────────────────────────
+function renderTarifas() {
+  const trEl = document.getElementById('tar-repartos');
+  trEl.innerHTML = '';
+  for (let i=1; i<=17; i++) {
+    trEl.innerHTML += '<div><label style="font-size:0.7rem;color:var(--muted)">Rep. '+i+'</label><input type="number" id="tr_'+i+'" step="0.01" value="'+T.repartos[i].toFixed(2)+'" class="doc-input" style="margin-bottom:4px"></div>';
+  }
+  ['combis','palets','termos'].forEach(tipo => {
+    const el = document.getElementById('tar-'+tipo);
+    el.innerHTML = '';
+    const arr = tipo==='combis'?T.combis:tipo==='palets'?T.palets:T.termos;
+    for (let z=1; z<=6; z++) {
+      el.innerHTML += '<div><label style="font-size:0.7rem;color:var(--muted)">Z'+z+'</label><input type="number" id="'+tipo+'_'+z+'" step="0.01" value="'+arr[z].toFixed(2)+'" class="doc-input" style="margin-bottom:4px"></div>';
+    }
+  });
+  document.getElementById('tar-dev').value = T.dev.toFixed(2);
+  document.getElementById('dev-label').textContent = T.dev.toFixed(2).replace('.',',') + ' €';
+  const recEl = document.getElementById('tar-recogidas');
+  recEl.innerHTML = '';
+  [2,3,4,5,6].forEach(z => {
+    let inner = '<div style="margin-bottom:14px"><div style="font-size:0.75rem;color:var(--accent);font-weight:700;margin-bottom:8px">Zona '+z+'</div>';
+    inner += '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px">';
+    for (let t=1; t<=6; t++) {
+      inner += '<div><label style="font-size:0.65rem;color:var(--muted)">'+t+'</label><input type="number" id="rec_'+z+'_'+t+'" step="0.01" value="'+T.recogidas[z][t].toFixed(2)+'" class="doc-input" style="padding:6px;margin-bottom:2px;font-size:0.8rem"></div>';
+    }
+    inner += '</div></div>';
+    recEl.innerHTML += inner;
+  });
+}
+
+function guardarTarifas() {
+  for (let i=1; i<=17; i++) T.repartos[i] = parseFloat(document.getElementById('tr_'+i).value)||0;
+  ['combis','palets','termos'].forEach(tipo => {
+    const arr = tipo==='combis'?T.combis:tipo==='palets'?T.palets:T.termos;
+    for (let z=1; z<=6; z++) arr[z] = parseFloat(document.getElementById(tipo+'_'+z).value)||0;
+  });
+  T.dev = parseFloat(document.getElementById('tar-dev').value)||0;
+  [2,3,4,5,6].forEach(z => {
+    for (let t=1; t<=6; t++) T.recogidas[z][t] = parseFloat(document.getElementById('rec_'+z+'_'+t).value)||0;
+  });
+  localStorage.setItem('t_rep', JSON.stringify(T.repartos));
+  localStorage.setItem('t_com', JSON.stringify(T.combis));
+  localStorage.setItem('t_pal', JSON.stringify(T.palets));
+  localStorage.setItem('t_ter', JSON.stringify(T.termos));
+  localStorage.setItem('t_dev', String(T.dev));
+  localStorage.setItem('t_rec', JSON.stringify(T.recogidas));
+  document.getElementById('dev-label').textContent = T.dev.toFixed(2).replace('.',',') + ' €';
+  const msg = document.getElementById('tar-msg');
+  msg.textContent = '✅ Tarifas guardadas';
+  setTimeout(()=>msg.textContent='', 2500);
+}
+
+function resetTarifas() {
+  T = {
+    repartos:  [...DEF_REPARTOS],
+    combis:    [...DEF_COMBIS],
+    palets:    [...DEF_PALETS],
+    termos:    [...DEF_TERMOS],
+    dev:       DEF_DEV,
+    recogidas: JSON.parse(JSON.stringify(DEF_RECOGIDAS))
+  };
+  ['t_rep','t_com','t_pal','t_ter','t_dev','t_rec'].forEach(k=>localStorage.removeItem(k));
+  renderTarifas();
+  const msg = document.getElementById('tar-msg');
+  msg.textContent = '↩ Tarifas restauradas';
+  setTimeout(()=>msg.textContent='', 2500);
+}
+
+// ── BACKUP ─────────────────────────────────────────
+function exportarBackup() {
+  const data = {
+    version: 1,
+    fecha: new Date().toISOString(),
+    tarifas: T,
+    historial: historial
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'backup-' + new Date().toLocaleDateString('es-ES').replace(/\//g,'-') + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importarBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const msg = document.getElementById('backup-msg');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.tarifas) throw new Error('Formato no válido');
+      if (!confirm('Reemplazar datos actuales por los del archivo?')) { event.target.value = ''; return; }
+      T = data.tarifas;
+      historial = data.historial || [];
+      localStorage.setItem('t_rep', JSON.stringify(T.repartos));
+      localStorage.setItem('t_com', JSON.stringify(T.combis));
+      localStorage.setItem('t_pal', JSON.stringify(T.palets));
+      localStorage.setItem('t_ter', JSON.stringify(T.termos));
+      localStorage.setItem('t_dev', String(T.dev));
+      localStorage.setItem('t_rec', JSON.stringify(T.recogidas));
+      localStorage.setItem('h_hist', JSON.stringify(historial));
+      msg.style.color = 'var(--success)';
+      msg.textContent = '✅ Copia restaurada';
+      setTimeout(()=>msg.textContent='', 2500);
+    } catch (err) {
+      msg.style.color = 'var(--danger)';
+      msg.textContent = '❌ Archivo no válido';
+      setTimeout(()=>msg.textContent='', 2500);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+let vehicles = JSON.parse(localStorage.getItem('vehicles') || '[]');
+let employees = JSON.parse(localStorage.getItem('employees') || '[]');
+let vacationRows = [];
+
+function addVehicle() {
+  const matricula = document.getElementById('vehicleMatricula').value.trim();
+  if (!matricula) { alert('Introduce matrícula'); return; }
+  const vehicle = {
+    id: Date.now(),
+    matricula,
+    model: document.getElementById('vehicleModel').value.trim(),
+    year: document.getElementById('vehicleYear').value.trim(),
+    itv: document.getElementById('vehicleITV').value,
+    seguro: document.getElementById('vehicleSeguro').value,
+    revision: document.getElementById('vehicleRevision').value,
+    atp: document.getElementById('vehicleATP').value,
+    tacogarfo: document.getElementById('vehicleTacogarfo').value,
+    transporte: document.getElementById('vehicleTransporte').value
+  };
+  vehicles.push(vehicle);
+  localStorage.setItem('vehicles', JSON.stringify(vehicles));
+  document.getElementById('vehicleMatricula').value = '';
+  document.getElementById('vehicleModel').value = '';
+  document.getElementById('vehicleYear').value = '';
+  renderVehicles();
+  alert('✅ Vehículo agregado');
+}
+
+function renderVehicles() {
+  const list = document.getElementById('vehiclesList');
+  if (vehicles.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px">No hay vehículos registrados</div>';
+    return;
+  }
+  list.innerHTML = vehicles.map((v, idx) => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+        <div>
+          <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--accent)">${v.matricula}</div>
+          <div style="font-size:0.85rem;color:var(--muted)">${v.model} (${v.year})</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn-secondary" onclick="generateVehicleQR(${idx})" style="padding:6px 10px;font-size:0.75rem;margin:0">🔲 QR</button>
+          <button class="btn-danger" onclick="deleteVehicle(${idx})" style="padding:6px 12px">🗑️</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:0.8rem">
+        <div><span style="color:var(--muted)">ITV:</span> <span style="color:${v.itv?'var(--text)':'var(--danger)'}">
+          ${v.itv ? v.itv + ' ✓' : 'Sin registrar'}</span></div>
+        <div><span style="color:var(--muted)">Seguro:</span> <span style="color:${v.seguro?'var(--text)':'var(--danger)'}">
+          ${v.seguro ? v.seguro + ' ✓' : 'Sin registrar'}</span></div>
+        <div><span style="color:var(--muted)">Revisión:</span> <span style="color:${v.revision?'var(--text)':'var(--danger)'}">
+          ${v.revision ? v.revision + ' ✓' : 'Sin registrar'}</span></div>
+        <div><span style="color:var(--muted)">ATP:</span> <span style="color:${v.atp?'var(--text)':'var(--danger)'}">
+          ${v.atp ? v.atp + ' ✓' : 'Sin registrar'}</span></div>
+        <div><span style="color:var(--muted)">Tacógrafo:</span> <span style="color:${v.tacogarfo?'var(--text)':'var(--danger)'}">
+          ${v.tacogarfo ? v.tacogarfo + ' ✓' : 'Sin registrar'}</span></div>
+        <div><span style="color:var(--muted)">Transporte:</span> <span style="color:${v.transporte?'var(--text)':'var(--danger)'}">
+          ${v.transporte ? v.transporte + ' ✓' : 'Sin registrar'}</span></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteVehicle(idx) {
+  if (confirm('¿Eliminar este vehículo?')) {
+    vehicles.splice(idx, 1);
+    localStorage.setItem('vehicles', JSON.stringify(vehicles));
+    renderVehicles();
+  }
+}
+
+function addVacationRow() {
+  if (vacationRows.length >= 3) { alert('Máximo 3 períodos'); return; }
+  vacationRows.push({ start: '', end: '' });
+  renderVacationPeriods();
+}
+
+function renderVacationPeriods() {
+  const container = document.getElementById('vacationPeriods');
+  container.innerHTML = vacationRows.map((v, idx) => `
+    <div style="display:grid;grid-template-columns:1fr 1fr 40px;gap:8px">
+      <input type="date" value="${v.start}" onchange="vacationRows[${idx}].start=this.value" class="doc-input" style="padding:8px">
+      <input type="date" value="${v.end}" onchange="vacationRows[${idx}].end=this.value" class="doc-input" style="padding:8px">
+      <button class="btn-danger" onclick="vacationRows.splice(${idx},1);renderVacationPeriods()" style="padding:6px;margin:0">✕</button>
+    </div>
+  `).join('');
+  document.getElementById('addVacationBtn').style.display = vacationRows.length >= 3 ? 'none' : 'block';
+}
+
+function addEmployee() {
+  const name = document.getElementById('employeeName').value.trim();
+  if (!name) { alert('Introduce nombre'); return; }
+  if (!document.getElementById('employeeStartDate').value) { alert('Introduce fecha inicio'); return; }
+  const employee = {
+    id: Date.now(),
+    name,
+    position: document.getElementById('employeePosition').value.trim(),
+    startDate: document.getElementById('employeeStartDate').value,
+    contract: document.getElementById('employeeContract').value,
+    licenseDate: document.getElementById('employeeLicenseDate').value,
+    capDate: document.getElementById('employeeCapDate').value,
+    vacations: vacationRows.map(v => ({ start: v.start, end: v.end })),
+    active: true,
+    endDate: null
+  };
+  employees.push(employee);
+  localStorage.setItem('employees', JSON.stringify(employees));
+  document.getElementById('employeeName').value = '';
+  document.getElementById('employeePosition').value = '';
+  document.getElementById('employeeStartDate').value = '';
+  vacationRows = [];
+  renderVacationPeriods();
+  renderEmployees();
+  alert('✅ Empleado agregado');
+}
+
+function renderEmployees() {
+  const list = document.getElementById('employeesList');
+  if (employees.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:30px">No hay empleados registrados</div>';
+    return;
+  }
+  list.innerHTML = employees.map((e, idx) => {
+    const now = new Date();
+    const start = new Date(e.startDate);
+    let years = now.getFullYear() - start.getFullYear();
+    let months = now.getMonth() - start.getMonth();
+    if (months < 0) { years--; months += 12; }
+    
+    const workingDate = e.endDate ? new Date(e.endDate) : now;
+    let totalDays = Math.floor((workingDate - start) / (1000*60*60*24));
+    
+    return `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+          <div>
+            <div style="font-family:'Bebas Neue';font-size:1.4rem;color:var(--accent)">${e.name}</div>
+            <div style="font-size:0.85rem;color:var(--muted)">${e.position} • ${e.contract}</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn-secondary" onclick="generateEmployeeQR(${idx})" style="padding:6px 10px;font-size:0.75rem;margin:0">🔲 QR</button>
+            <button class="btn-secondary" onclick="toggleEmployee(${idx})" style="padding:6px 10px;font-size:0.75rem;margin:0">
+              ${e.active ? '⏸️' : '▶️'}
+            </button>
+            <button class="btn-danger" onclick="deleteEmployee(${idx})" style="padding:6px 12px">🗑️</button>
+          </div>
+        </div>
+        
+        <div style="background:rgba(200,245,66,0.08);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:0.8rem;text-align:center">
+          <div><div style="color:var(--muted);font-size:0.7rem">Antigüedad</div><div style="color:var(--accent);font-family:'Bebas Neue';font-size:1.1rem">${years}a ${months}m</div></div>
+          <div><div style="color:var(--muted);font-size:0.7rem">Desde</div><div style="color:var(--text);font-family:'Bebas Neue';font-size:1rem">${e.startDate}</div></div>
+          <div><div style="color:var(--muted);font-size:0.7rem">Estado</div><div style="color:${e.active?'var(--success)':'var(--danger)'};font-weight:600">${e.active?'Activo':'Inactivo'}</div></div>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.8rem;margin-bottom:10px">
+          <div><span style="color:var(--muted)">Permiso:</span> <span style="color:${e.licenseDate?'var(--text)':'var(--danger)'}">
+            ${e.licenseDate ? e.licenseDate + ' ✓' : 'Sin registrar'}</span></div>
+          <div><span style="color:var(--muted)">CAP:</span> <span style="color:${e.capDate?'var(--text)':'var(--danger)'}">
+            ${e.capDate ? e.capDate + ' ✓' : 'Sin registrar'}</span></div>
+        </div>
+        
+        ${e.vacations.length > 0 ? `
+          <div style="background:var(--surface2);padding:8px;border-radius:6px;font-size:0.75rem">
+            <div style="color:var(--accent);font-weight:600;margin-bottom:6px">Vacaciones:</div>
+            ${e.vacations.map((v,vi) => `<div style="color:var(--muted)">${vi+1}. ${v.start} → ${v.end}</div>`).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleEmployee(idx) {
+  employees[idx].active = !employees[idx].active;
+  if (!employees[idx].active) {
+    employees[idx].endDate = new Date().toISOString().split('T')[0];
+  } else {
+    employees[idx].endDate = null;
+  }
+  localStorage.setItem('employees', JSON.stringify(employees));
+  renderEmployees();
+}
+
+function deleteEmployee(idx) {
+  if (confirm('¿Eliminar este empleado?')) {
+    employees.splice(idx, 1);
+    localStorage.setItem('employees', JSON.stringify(employees));
+    renderEmployees();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// QR FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════
+
+function generateVehicleQR(idx) {
+  const v = vehicles[idx];
+  const info = `VEHÍCULO\nMatrícula: ${v.matricula}\nModelo: ${v.model}\nAño: ${v.year}\n\nDOCUMENTOS\nITV: ${v.itv || 'N/A'}\nSeguro: ${v.seguro || 'N/A'}\nRevisión: ${v.revision || 'N/A'}\nATP: ${v.atp || 'N/A'}\nTacógrafo: ${v.tacogarfo || 'N/A'}\nTransporte: ${v.transporte || 'N/A'}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(info)}`;
+  
+  document.getElementById('qrTitle').textContent = `${v.matricula}`;
+  document.getElementById('qrImage').src = qrUrl;
+  document.getElementById('qrInfo').innerHTML = `<strong>Información codificada:</strong><br>${info.replace(/\n/g, '<br>')}`;
+  document.getElementById('qrModal').classList.add('active');
+  
+  // Guardar URL para descarga
+  window.currentQrUrl = qrUrl;
+  window.currentQrName = `QR-Vehiculo-${v.matricula}`;
+}
+
+function generateEmployeeQR(idx) {
+  const e = employees[idx];
+  const vacs = e.vacations.map((v,i) => `Vacaciones ${i+1}: ${v.start} → ${v.end}`).join('\n');
+  const info = `EMPLEADO\nNombre: ${e.name}\nPuesto: ${e.position}\nTipo: ${e.contract}\n\nFECHAS\nInicio: ${e.startDate}\nLicencia: ${e.licenseDate || 'N/A'}\nCAP: ${e.capDate || 'N/A'}\n\n${vacs ? 'VACACIONES\n' + vacs : ''}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(info)}`;
+  
+  document.getElementById('qrTitle').textContent = `${e.name}`;
+  document.getElementById('qrImage').src = qrUrl;
+  document.getElementById('qrInfo').innerHTML = `<strong>Información codificada:</strong><br>${info.replace(/\n/g, '<br>')}`;
+  document.getElementById('qrModal').classList.add('active');
+  
+  window.currentQrUrl = qrUrl;
+  window.currentQrName = `QR-Empleado-${e.name}`;
+}
+
+function closeQR() {
+  document.getElementById('qrModal').classList.remove('active');
+}
+
+function downloadQR() {
+  const link = document.createElement('a');
+  link.href = window.currentQrUrl;
+  link.download = window.currentQrName + '.png';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Cerrar modal al hacer clic fuera
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('qrModal').addEventListener('click', function(e) {
+    if (e.target === this) closeQR();
+  });
+});
+
+function updateDashboard() {
+  const now = new Date();
+  let critical = 0, warning = 0, ok = 0;
+  
+  vehicles.forEach(v => {
+    [v.licenseDate, v.capDate].forEach(date => {
+      if (!date) return;
+      const days = Math.floor((new Date(date) - now) / (1000*60*60*24));
+      if (days < 0) critical++;
+      else if (days <= 15) critical++;
+      else if (days <= 30) warning++;
+      else ok++;
+    });
+  });
+  
+  document.getElementById('critical-count').textContent = critical;
+  document.getElementById('warning-count').textContent = warning;
+  document.getElementById('ok-count').textContent = ok;
+}
+
+// INIT
+renderTarifas();
+renderHistorial();
+updateDashboard();
+renderVehicles();
+renderEmployees();
+renderVacationPeriods();
+</script>
+
+<!-- MODAL QR -->
+<div class="modal-qr" id="qrModal">
+    <div class="modal-qr-content">
+        <button class="modal-qr-close" onclick="closeQR()">✕</button>
+        <div style="font-family:'Bebas Neue';font-size:1.3rem;color:var(--accent);margin-bottom:15px" id="qrTitle"></div>
+        <img class="qr-image" id="qrImage" alt="QR Code">
+        <div class="qr-info" id="qrInfo"></div>
+        <button class="btn-primary" onclick="downloadQR()" style="margin-top:15px;padding:10px 20px">⬇️ Descargar QR</button>
+    </div>
+</div>
+
+</body>
+</html>
